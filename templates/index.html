@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Matcher</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<style>
+    body {
+        font-style: italic;
+    }
+    .container {
+        padding-top: 20px;
+        padding-bottom: 30px;
+        box-shadow: 1px 1px 2px 2px black; 
+        background-color: rgb(247, 237, 226);
+    }
+    .head {
+        background-color: black;
+        color: white;
+        padding-top: 5px;
+        padding-bottom: 10px;
+        text-shadow: 1px 1px 2px whitesmoke;
+        box-shadow: 1px 1px 2px black; 
+    }
+    h3{
+        color: rgb(0, 0, 0);
+        text-align: center;
+        font-weight: bold;
+        padding-top: 2px;
+        padding-bottom: 8px;
+    }
+    label{
+        font-weight: bold;
+    }
+</style>
+<body>
+    <div class="container mt-4 mb-4">
+        <h1 class="head text-center">CV Classification & Matcher System</h1>
+
+        <!-- CV Classification Section -->
+        <h3 class="mt-3">CV Classification</h3>
+        <form id="classifyForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="cv" class="mt-1">Upload CV:</label>
+                <input type="file" class="form-control" id="cv" name="cv" required>
+            </div>
+            <button type="submit" class="btn btn-outline-danger" id="classifyButton">Classify CV</button>
+        </form>
+        <div id="classificationResult" class="mt-4"></div>
+        -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        <!-- CV vs. Job Description Matching Section -->
+        <h3 class="mt-3">CV vs. Job / Job vs. CV</h3>
+        <form id="matcherForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="job_description" class="mt-1">Job Description:</label>
+                <textarea class="form-control" id="job_description" name="job_description" rows="6" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="resumes">Upload Resumes: (pdf, docx, txt)</label>
+                <input type="file" class="form-control" id="resumes" name="resumes" multiple required>
+            </div>
+            <button type="submit" class="btn btn-outline-danger" id="matchButton">Match Resumes</button>
+        </form>
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // CV Classification Logic
+            const classifyForm = document.getElementById('classifyForm');
+            classifyForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(classifyForm);
+
+                fetch('/classify', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('classificationResult').innerHTML = 
+                        `<strong>Classification:</strong> ${data.classification}`;
+                })
+                .catch(error => console.error('Error:', error));
+            });
+
+            // Job Description vs. Resume Matching Logic
+            const matcherForm = document.getElementById('matcherForm');
+            matcherForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const formData = new FormData(matcherForm);
+
+                fetch('/match', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const { top_resumes, similarity_scores } = data;
+                    let resultHTML = '<h4>Top Matching Resumes:</h4><ul>';
+                    top_resumes.forEach((index) => {
+                        resultHTML += `<li>Resume ${index + 1}: Similarity Score: ${similarity_scores[index].toFixed(2)}</li>`;
+                    });
+                    resultHTML += '</ul>';
+                    document.getElementById('result').innerHTML = resultHTML;
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+</body>
+</html>
